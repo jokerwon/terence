@@ -1,0 +1,41 @@
+{
+  "components": [
+    {
+      "name": "advanced-search",
+      "description": "Advanced search component with multiple field types support",
+      "dependencies": [
+        "react"
+      ],
+      "registryDependencies": [
+        "button",
+        "input",
+        "label",
+        "select"
+      ]
+    },
+    {
+      "name": "data-table",
+      "description": "Feature-rich data table with sorting, pagination, and row selection",
+      "dependencies": [
+        "react",
+        "@tanstack/react-table"
+      ],
+      "registryDependencies": [
+        "button",
+        "checkbox",
+        "select",
+        "table"
+      ]
+    },
+    {
+      "name": "form-wizard",
+      "description": "Multi-step form wizard with step validation and navigation",
+      "dependencies": [
+        "react"
+      ],
+      "registryDependencies": [
+        "button"
+      ]
+    }
+  ]
+}

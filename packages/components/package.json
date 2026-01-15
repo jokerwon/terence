@@ -1,0 +1,13 @@
+{
+  "name": "business-ui-components",
+  "version": "0.1.0",
+  "description": "Business component source code for Business UI",
+  "private": true,
+  "type": "module",
+  "author": "",
+  "license": "MIT",
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "@tanstack/react-table": "^8.0.0"
+  }
+}

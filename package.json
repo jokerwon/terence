@@ -1,0 +1,37 @@
+{
+  "name": "business-ui",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Enterprise business component library built on shadcn/ui",
+  "workspaces": [
+    "packages/*",
+    "examples/*"
+  ],
+  "scripts": {
+    "dev": "pnpm --filter business-ui-cli dev",
+    "build": "pnpm --filter business-ui-cli build",
+    "build:all": "pnpm -r build",
+    "type-check": "pnpm -r type-check",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test"
+  },
+  "keywords": [
+    "react",
+    "components",
+    "ui",
+    "shadcn",
+    "business-components",
+    "cli"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.15.0"
+}
