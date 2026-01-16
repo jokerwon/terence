@@ -30,29 +30,29 @@ export default [
         },
       },
     },
-    // rules: {
-    //   // 基础规则
-    //   'no-console': 'off',
-    //   'no-unused-vars': ['warn', {
-    //     argsIgnorePattern: '^_',
-    //     vars: 'all',
-    //     ignoreRestSiblings: true,
-    //     varsIgnorePattern: '^React$'  // 忽略未使用的 React 导入
-    //   }],
+    rules: {
+      // 基础规则
+      'no-console': 'off',
+      'no-unused-vars': ['warn', {
+        argsIgnorePattern: '^_',
+        vars: 'all',
+        ignoreRestSiblings: true,
+        varsIgnorePattern: '^React$'  // 忽略未使用的 React 导入
+      }],
 
-    //   // ES2022+ 特性
-    //   'prefer-const': 'error',
-    //   'no-var': 'error'
-    // }
+      // ES2022+ 特性
+      'prefer-const': 'error',
+      'no-var': 'error'
+    }
   },
 
   // JSX 文件：放宽未使用变量检查（因为 JSX 中的使用可能无法被检测）
-  // {
-  //   files: ['**/*.jsx'],
-  //   rules: {
-  //     'no-unused-vars': 'off'  // 在 JSX 文件中禁用此规则，因为无法可靠地检测 JSX 中的使用
-  //   }
-  // },
+  {
+    files: ['**/*.jsx'],
+    rules: {
+      'no-unused-vars': 'off'  // 在 JSX 文件中禁用此规则，因为无法可靠地检测 JSX 中的使用
+    }
+  },
 
   // Core package: 严禁依赖 UI 库和其他 Terence 包
   {
