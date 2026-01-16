@@ -1,0 +1,11 @@
+{
+  "version": "1.0.0",
+  "uiDir": "src/ui",
+  "components": {
+    "OrderForm": {
+      "version": "1.0.0",
+      "coreVersion": "1.0.0",
+      "addedAt": "2025-01-16T00:00:00.000Z"
+    }
+  }
+}
