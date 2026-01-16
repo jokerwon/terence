@@ -3,6 +3,8 @@
 Auto-generated from all feature plans. Last updated: 2026-01-16
 
 ## Active Technologies
+- JavaScript (ES2022+), 不使用 TypeScrip + pnpm (包管理器), Git (版本控制), Vite (构建工具) (001-move-seed)
+- N/A (文件系统操作) (001-move-seed)
 
 - JavaScript (ES2022+), 不使用 TypeScrip (002-arch-compliant-init)
 
@@ -22,6 +24,7 @@ npm test && npm run lint
 JavaScript (ES2022+), 不使用 TypeScrip: Follow standard conventions
 
 ## Recent Changes
+- 001-move-seed: Added JavaScript (ES2022+), 不使用 TypeScrip + pnpm (包管理器), Git (版本控制), Vite (构建工具)
 
 - 002-arch-compliant-init: Added JavaScript (ES2022+), 不使用 TypeScrip
 
