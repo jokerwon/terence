@@ -6,8 +6,8 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@terence/core': path.resolve(__dirname, '../../core/src'),
-      '@terence/ui': path.resolve(__dirname, '../../ui/src')
+      '@terence/core': path.resolve(__dirname, '../../packages/core/src'),
+      '@terence/ui': path.resolve(__dirname, '../../packages/ui/src')
     }
   },
   server: {
