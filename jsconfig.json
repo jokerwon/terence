@@ -1,0 +1,37 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "lib": ["ES2022", "DOM"],
+    "checkJs": true,
+    "noEmit": true,
+    "strict": false,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "moduleResolution": "bundler",
+    "baseUrl": ".",
+    "paths": {
+      "@terence/core": ["./packages/core/src"],
+      "@terence/core/*": ["./packages/core/src/*"],
+      "@terence/ui": ["./packages/ui/src"],
+      "@terence/ui/*": ["./packages/ui/src/*"],
+      "@terence/cli": ["./packages/cli/src"],
+      "@terence/cli/*": ["./packages/cli/src/*"]
+    },
+    "jsx": "react-jsx"
+  },
+  "include": [
+    "packages/**/*.js",
+    "packages/**/*.jsx"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    "**/*.test.js",
+    "**/*.test.jsx",
+    "**/coverage/**"
+  ]
+}

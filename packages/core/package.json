@@ -1,0 +1,35 @@
+{
+  "name": "@terence/core",
+  "version": "1.0.0",
+  "description": "Core business logic engines and services for Terence",
+  "main": "src/index.js",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.js",
+    "./engines/*": "./src/engines/*.js",
+    "./services/*": "./src/services/*.js",
+    "./guards/*": "./src/guards/*.js",
+    "./adapters/*": "./src/adapters/*.js",
+    "./utils/*": "./src/utils/*.js"
+  },
+  "scripts": {
+    "test": "vitest",
+    "test:coverage": "vitest --coverage",
+    "lint": "eslint src/",
+    "build": "echo 'Core package: JavaScript + JSDoc, no compilation needed' && npm run lint && npm run test"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "vitest": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "business-logic",
+    "engines",
+    "state-machines"
+  ],
+  "author": "Terence Team",
+  "license": "MIT"
+}

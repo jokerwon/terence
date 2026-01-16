@@ -1,0 +1,40 @@
+{
+  "name": "@terence/ui",
+  "version": "1.0.0",
+  "description": "UI component adapters and views for Terence",
+  "main": "src/index.js",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.js",
+    "./components/*": "./src/components/*.jsx",
+    "./adapters/*": "./src/adapters/*.jsx",
+    "./hooks/*": "./src/hooks/*.js",
+    "./shared/*": "./src/shared/*.js"
+  },
+  "scripts": {
+    "test": "vitest",
+    "lint": "eslint src/"
+  },
+  "peerDependencies": {
+    "@terence/core": "workspace:*",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "antd": "^6.0.0"
+  },
+  "devDependencies": {
+    "@terence/core": "workspace:*",
+    "@testing-library/react": "^16.0.0",
+    "@testing-library/jest-dom": "^6.0.0",
+    "vitest": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "ui-components",
+    "adapters",
+    "react"
+  ],
+  "author": "Terence Team",
+  "license": "MIT"
+}
