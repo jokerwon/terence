@@ -71,7 +71,7 @@ pnpm install
 pnpm dev
 
 # 或直接运行 seed 项目
-cd packages/examples/seed
+cd apps/seed
 pnpm dev
 ```
 
@@ -107,7 +107,7 @@ pnpm dev
 ## 项目结构
 
 ```
-packages/examples/seed/
+apps/seed/
 ├── src/
 │   ├── main.jsx              # 应用入口
 │   ├── App.jsx               # 根组件（ConfigProvider）

@@ -1,0 +1,215 @@
+# Workspace Structure Contract
+
+**Version**: 2.0.0
+**Feature**: 001-move-seed
+**Date**: 2026-01-16
+
+## Overview
+
+此契约定义了 Terence 项目移动后的 workspace 结构和配置规范。
+
+## Workspace Configuration
+
+### pnpm-workspace.yaml
+
+```yaml
+# Target configuration (after move)
+packages:
+  - 'packages/*'
+  - 'apps/*'
+```
+
+### Pattern Specifications
+
+| Pattern | Purpose | Matches |
+|---------|---------|---------|
+| `packages/*` | 库代码 | cli, core, ui |
+| `apps/*` | 可部署应用 | seed (and future apps) |
+
+### Removed Patterns
+
+| Pattern | Reason |
+|---------|--------|
+| `packages/examples/*` | Seed 应用移至 apps/ |
+
+## Directory Structure
+
+### Standard Layout
+
+```
+terence/
+├── packages/              # 可复用的库代码
+│   ├── cli/              # CLI 工具 (@terence/cli)
+│   ├── core/             # 业务内核层 (@terence/core)
+│   └── ui/               # 业务组件 UI 层 (@terence/ui)
+│
+├── apps/                  # 可部署的应用
+│   └── seed/             # 示例应用 (@terence/seed)
+│
+├── docs/                  # 项目文档
+├── specs/                 # 功能规范
+├── package.json           # 根 package.json
+└── pnpm-workspace.yaml    # Workspace 配置
+```
+
+### Package Naming Convention
+
+所有包必须使用 `@terence/*` 命名空间:
+
+| Directory | Package Name | Type |
+|-----------|-------------|------|
+| packages/cli | @terence/cli | Library |
+| packages/core | @terence/core | Library |
+| packages/ui | @terence/ui | Library |
+| apps/seed | @terence/seed | Application |
+
+### Layer Assignment Rules
+
+根据 Terence 宪章,包必须按层级分配:
+
+1. **Core Layer** (`packages/core/`)
+   - 业务逻辑和状态管理
+   - 不依赖 UI 技术
+   - 可被其他层依赖
+
+2. **UI Layer** (`packages/ui/`)
+   - 基于 antd@6 的业务组件
+   - 通过 CLI 源码交付
+   - 依赖 core,不依赖 seed
+
+3. **Application Layer** (`apps/*`)
+   - 可部署的应用
+   - 组合使用 core 和 ui
+   - 依赖 core 和 ui
+
+## Dependencies
+
+### Allowed Dependency Flow
+
+```
+apps/seed → packages/ui → packages/core
+apps/seed → packages/core
+```
+
+### Forbidden Dependencies
+
+```
+packages/core → X packages/ui
+packages/core → X apps/seed
+packages/ui → X apps/seed
+```
+
+### Workspace Protocol
+
+所有包间依赖使用 `workspace:*` 协议:
+
+```json
+{
+  "dependencies": {
+    "@terence/core": "workspace:*",
+    "@terence/ui": "workspace:*"
+  }
+}
+```
+
+## Migration Requirements
+
+### Pre-Migration
+
+```yaml
+Current State:
+  Workspace:
+    - 'packages/*'
+    - 'packages/examples/*'
+  Seed Location: packages/examples/seed
+  Git Status: Clean (no uncommitted changes)
+```
+
+### Post-Migration
+
+```yaml
+Target State:
+  Workspace:
+    - 'packages/*'
+    - 'apps/*'
+  Seed Location: apps/seed
+  Git Status: Staged changes (renamed files)
+  History: Preserved (git mv used)
+```
+
+### Verification Checklist
+
+- [ ] Workspace 配置已更新
+- [ ] Seed 包已移动到 apps/seed
+- [ ] Git 历史记录完整 (`git log --follow`)
+- [ ] `pnpm list` 显示所有包
+- [ ] `pnpm why @terence/seed` 正常解析
+- [ ] 所有脚本 (dev, build, test, lint) 正常运行
+- [ ] 文档已更新
+
+## Backward Compatibility
+
+### Breaking Changes
+
+❌ **无破坏性变更**
+
+此重构完全向后兼容:
+- 包名不变
+- 导入路径不变
+- API 不变
+- 行为不变
+
+### Migration Path for Consumers
+
+如果外部项目依赖 Terence 包:
+
+1. **Library Packages** (@terence/core, @terence/ui): 无影响
+2. **CLI Usage**: 无影响
+3. **Seed as Reference**: 如有参考 seed 的代码,需更新路径引用
+
+## Implementation Notes
+
+### Git Commands
+
+```bash
+# 1. 确保工作区干净
+git status
+
+# 2. 创建目标目录
+mkdir -p apps
+
+# 3. 使用 git mv 移动
+git mv packages/examples/seed apps/seed
+
+# 4. 更新 workspace 配置
+# 编辑 pnpm-workspace.yaml
+
+# 5. 验证
+pnpm install
+pnpm list
+
+# 6. 提交
+git add .
+git commit -m "feat: move @terence/seed to apps/seed"
+```
+
+### Rollback Plan
+
+如果需要回滚:
+
+```bash
+# 回滚移动
+git revert HEAD
+
+# 或手动回滚
+git mv apps/seed packages/examples/seed
+# 恢复 pnpm-workspace.yaml
+```
+
+## Version Control
+
+**Contract Version**: 2.0.0
+**Last Updated**: 2026-01-16
+**Change Log**:
+- 2.0.0: 添加 apps/ 目录,移除 packages/examples/
+- 1.0.0: 初始版本 (packages/*, packages/examples/*)
