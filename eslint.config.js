@@ -33,25 +33,91 @@ export default [
     rules: {
       // 基础规则
       'no-console': 'off',
-      'no-unused-vars': ['warn', {
-        argsIgnorePattern: '^_',
-        vars: 'all',
-        ignoreRestSiblings: true,
-        varsIgnorePattern: '^React$'  // 忽略未使用的 React 导入
-      }],
+      'no-unused-vars': [
+        'warn',
+        {
+          argsIgnorePattern: '^_',
+          vars: 'all',
+          ignoreRestSiblings: true,
+          varsIgnorePattern: '^React$', // 忽略未使用的 React 导入
+        },
+      ],
 
       // ES2022+ 特性
       'prefer-const': 'error',
-      'no-var': 'error'
-    }
+      'no-var': 'error',
+    },
   },
 
   // JSX 文件：放宽未使用变量检查（因为 JSX 中的使用可能无法被检测）
   {
     files: ['**/*.jsx'],
     rules: {
-      'no-unused-vars': 'off'  // 在 JSX 文件中禁用此规则，因为无法可靠地检测 JSX 中的使用
-    }
+      'no-unused-vars': 'off', // 在 JSX 文件中禁用此规则，因为无法可靠地检测 JSX 中的使用
+    },
+  },
+
+  // Core engines 目录：最严格的架构约束
+  {
+    files: ['packages/core/engines/**/*.js'],
+    languageOptions: {
+      globals: {
+        // 明确禁用 React 全局变量
+        React: 'off',
+        useState: 'off',
+        useEffect: 'off',
+        useReducer: 'off',
+        createContext: 'off',
+        useContext: 'off',
+        useCallback: 'off',
+        useMemo: 'off',
+      },
+    },
+    rules: {
+      // 禁止导入 UI 库
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['react-dom', 'react/jsx-runtime'],
+              message: '[架构约束 Core.engines] Engine 层严禁依赖 React。Engine 应为纯业务逻辑，无 UI 依赖。',
+            },
+            {
+              group: ['zustand', 'immer'],
+              message: '[架构约束 Core.engines] Engine 层严禁依赖状态管理库。状态管理应在适配器层完成。',
+            },
+            {
+              group: ['antd', '@ant-design/icons', '@ant-design/pro-components'],
+              message: '[架构约束 Core.engines] Engine 层严禁依赖 UI 组件库。UI 组件应在适配器层使用。',
+            },
+            // 禁止通过 @terence/ui 间接导入 UI 库
+            {
+              group: ['@terence/ui/**'],
+              message: '[架构约束 Core.engines] Engine 层严禁通过 @terence/ui 间接导入 UI 库。',
+            },
+            // 禁止其他 UI 相关的导入
+            {
+              group: ['@emotion/react', '@emotion/styled'],
+              message: '[架构约束 Core.engines] Engine 层严禁依赖 Emotion CSS-in-JS 库。',
+            },
+            {
+              group: ['styled-components', 'linaria'],
+              message: '[架构约束 Core.engines] Engine 层严禁依赖 CSS-in-JS 库。',
+            },
+          ],
+        },
+      ],
+
+      // 禁止使用 React 相关的 API
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'JSXElement',
+          message: '[架构约束 Core.engines] Engine 层严禁使用 JSX。Engine 是纯业务逻辑层。',
+        },
+      ],
+    },
   },
 
   // Core package: 严禁依赖 UI 库和其他 Terence 包
@@ -68,7 +134,7 @@ export default [
               message: '[架构原则 I. 分层架构] Core 包严禁依赖 UI 或 Seed 包。依赖方向：core → ui 是被禁止的。参考：.specify/memory/constitution.md',
             },
             {
-              group: ['react', 'react-dom', 'antd'],
+              group: ['react-dom', 'antd'],
               message: '[架构原则 I. 分层架构] Core 包严禁依赖 UI 库（React/antd）。Core 应只包含业务逻辑。参考：.specify/memory/constitution.md',
             },
           ],
