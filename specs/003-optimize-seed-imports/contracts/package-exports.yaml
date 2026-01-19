@@ -1,0 +1,428 @@
+# Package Export Contracts
+
+**Feature**: 003-optimize-seed-imports
+**Version**: 1.0.0
+**Date**: 2026-01-19
+
+## Overview
+
+本文档定义了 @terence/ui 和 @terence/core 包的导出契约,确保包的导出结构符合预期,并支持 seed 项目通过 import 语句直接引用。
+
+---
+
+## @terence/core Package Contract
+
+**Package**: @terence/core
+**Version**: 1.0.0
+**Location**: packages/core/src
+
+### Top-Level Export Contract
+
+**File**: `packages/core/src/index.js`
+
+```javascript
+/**
+ * @terence/core - Business logic engines and services
+ *
+ * @exports {Object} All core modules re-exported
+ */
+export * from './engines/index.js';
+export * from './services/index.js';
+export * from './guards/index.js';
+export * from './adapters/index.js';
+export * from './utils/index.js';
+```
+
+**Validation Rules**:
+- ✅ MUST export all 5 modules (engines, services, guards, adapters, utils)
+- ✅ MUST NOT have any conditional exports
+- ✅ MUST NOT depend on @terence/ui or @terence/seed
+- ✅ MUST be importable as `import {} from '@terence/core'`
+
+### Module Export Contracts
+
+#### Engines Module
+
+**File**: `packages/core/src/engines/index.js`
+
+**Exports**:
+```javascript
+export * from './OrderEngine.js';
+```
+
+**Expected Exports**:
+| Name | Type | Signature | Since |
+|------|------|-----------|-------|
+| `createOrderEngine` | function | `(config: Object): Engine` | 1.0.0 |
+| `OrderEngineDefaults` | object | `{ submitOrder: Function }` | 1.0.0 |
+
+**Validation**:
+```bash
+# 验证导出存在
+node -e "const { createOrderEngine } = require('@terence/core'); console.log(typeof createOrderEngine === 'function')"
+# Expected output: true
+```
+
+---
+
+#### Services Module
+
+**File**: `packages/core/src/services/index.js`
+
+**Exports**:
+```javascript
+export * from './PriceCalculator.js';
+```
+
+**Expected Exports**:
+| Name | Type | Signature | Since |
+|------|------|-----------|-------|
+| `calculatePrice` | function | `(items: Array): Object` | 1.0.0 |
+| `PriceCalculator` | class | `new PriceCalculator()` | 1.0.0 |
+
+---
+
+#### Guards Module
+
+**File**: `packages/core/src/guards/index.js`
+
+**Exports**:
+```javascript
+export * from './OrderGuards.js';
+```
+
+**Expected Exports**:
+| Name | Type | Signature | Since |
+|------|------|-----------|-------|
+| `validateOrderItem` | function | `(item: Object): boolean` | 1.0.0 |
+| `validateOrderState` | function | `(state: Object, action: string): boolean` | 1.0.0 |
+
+---
+
+#### Adapters Module
+
+**File**: `packages/core/src/adapters/index.js`
+
+**Exports**:
+```javascript
+// Currently empty
+```
+
+**Expected Exports**: None
+
+---
+
+#### Utils Module
+
+**File**: `packages/core/src/utils/index.js`
+
+**Exports**:
+```javascript
+export * from './Money.js';
+export * from './IdGenerator.js';
+```
+
+**Expected Exports**:
+| Name | Type | Signature | Since |
+|------|------|-----------|-------|
+| `formatMoney` | function | `(cents: number): string` | 1.0.0 |
+| `generateId` | function | `(prefix: string): string` | 1.0.0 |
+
+---
+
+## @terence/ui Package Contract
+
+**Package**: @terence/ui
+**Version**: 1.0.0
+**Location**: packages/ui/src
+**Status**: ⚠️ **NEEDS IMPLEMENTATION**
+
+### Top-Level Export Contract
+
+**File**: `packages/ui/src/index.js`
+
+**Required Implementation**:
+```javascript
+/**
+ * @terence/ui - UI component adapters and views
+ *
+ * @exports {Object} All UI modules re-exported
+ */
+export * from './components/index.js';
+export * from './adapters/index.js';
+export * from './hooks/index.js';
+export * from './shared/index.js';
+```
+
+**Validation Rules**:
+- ✅ MUST export all 4 modules (components, adapters, hooks, shared)
+- ✅ MUST NOT have any conditional exports
+- ✅ MAY depend on @terence/core (in adapters only)
+- ✅ MUST be importable as `import {} from '@terence/ui'`
+
+**Current Status**: ✅ Already correctly implemented
+
+---
+
+### Components Module Contract
+
+**File**: `packages/ui/src/components/index.js`
+
+**Required Implementation**:
+```javascript
+/**
+ * UI Components - Reusable presentational components
+ */
+
+// OrderForm 组件
+export {
+  OrderFormView,
+  useOrderFormAdapter
+} from './OrderForm/index.js';
+
+export {
+  formatAmount,
+  validateItemInput,
+  calculateItemSubtotal
+} from './OrderForm/OrderForm.logic.js';
+```
+
+**Expected Exports**:
+| Name | Type | Signature | Since | Status |
+|------|------|-----------|-------|--------|
+| `OrderFormView` | component | React Component | 1.0.0 | ⚠️ Missing |
+| `useOrderFormAdapter` | function | `(config): Object` | 1.0.0 | ⚠️ Missing |
+| `formatAmount` | function | `(cents: number): string` | 1.0.0 | ⚠️ Missing |
+| `validateItemInput` | function | `(item: Object): boolean` | 1.0.0 | ⚠️ Missing |
+| `calculateItemSubtotal` | function | `(item: Object): number` | 1.0.0 | ⚠️ Missing |
+
+**Current Status**: ❌ File is empty, needs implementation
+
+**Validation**:
+```bash
+# 实施后验证导出存在
+node -e "const { OrderFormView } = require('@terence/ui'); console.log(typeof OrderFormView)"
+# Expected output: function (after implementation)
+
+# 验证组件可以导入
+cd apps/seed
+node -e "import { OrderFormView } from '@terence/ui'; console.log(OrderFormView)"
+# Expected: No errors (after implementation)
+```
+
+---
+
+#### OrderForm Component Contract
+
+**File**: `packages/ui/src/components/OrderForm/index.js`
+
+**Current Implementation**:
+```javascript
+export { OrderFormView } from './OrderForm.view.jsx';
+export { useOrderFormAdapter } from './OrderForm.adapter.js';
+export { formatAmount, validateItemInput, calculateItemSubtotal } from './OrderForm.logic.js';
+```
+
+**Status**: ✅ Correctly exports all component parts
+
+**Validation**:
+```bash
+# 验证 OrderForm 组件导出
+cat packages/ui/src/components/OrderForm/index.js | grep "export"
+# Expected output:
+# export { OrderFormView } from './OrderForm.view.jsx';
+# export { useOrderFormAdapter } from './OrderForm.adapter.js';
+# export { formatAmount, validateItemInput, calculateItemSubtotal } from './OrderForm.logic.js';
+```
+
+---
+
+### Adapters Module Contract
+
+**File**: `packages/ui/src/adapters/index.js`
+
+**Current Status**: Placeholder
+
+**Expected Exports**: None (future)
+
+**Validation**:
+```bash
+# 文件应该存在但可以没有导出
+ls packages/ui/src/adapters/index.js
+# Expected: File exists
+```
+
+---
+
+### Hooks Module Contract
+
+**File**: `packages/ui/src/hooks/index.js`
+
+**Current Status**: Placeholder
+
+**Expected Exports**: None (future)
+
+**Validation**:
+```bash
+# 文件应该存在但可以没有导出
+ls packages/ui/src/hooks/index.js
+# Expected: File exists
+```
+
+---
+
+### Shared Module Contract
+
+**File**: `packages/ui/src/shared/index.js`
+
+**Current Status**: Placeholder
+
+**Expected Exports**: None (future)
+
+**Validation**:
+```bash
+# 文件应该存在但可以没有导出
+ls packages/ui/src/shared/index.js
+# Expected: File exists
+```
+
+---
+
+## Seed Project Import Contract
+
+**Project**: @terence/seed (apps/seed)
+**Status**: ⚠️ **NEEDS UPDATE**
+
+### Current Import Pattern (Before)
+
+```javascript
+// apps/seed/src/pages/OrderPage.jsx
+import { createOrderEngine } from '@terence/core';  // ✅ Correct
+import { OrderFormView } from '../ui/OrderForm';     // ❌ Local file
+```
+
+**Issues**:
+- ❌ Imports from local `../ui/OrderForm` directory
+- ❌ Creates code duplication
+- ❌ Does not benefit from workspace dependency
+
+### Target Import Pattern (After)
+
+```javascript
+// apps/seed/src/pages/OrderPage.jsx
+import { createOrderEngine } from '@terence/core';  // ✅ Correct
+import { OrderFormView } from '@terence/ui';        // ✅ Workspace package
+```
+
+**Benefits**:
+- ✅ Imports from workspace package
+- ✅ No code duplication
+- ✅ Automatically uses latest version
+- ✅ Consistent with core imports
+
+**Validation**:
+```bash
+# 验证导入语句
+grep "import.*@terence" apps/seed/src/pages/OrderPage.jsx
+# Expected:
+# import { createOrderEngine } from '@terence/core';
+# import { OrderFormView } from '@terence/ui';
+
+# 验证没有本地导入
+grep "import.*from.*\.\./ui" apps/seed/src/pages/OrderPage.jsx
+# Expected: No results
+
+# 验证 ui 目录已删除
+ls apps/seed/src/ui 2>&1
+# Expected: No such file or directory
+```
+
+---
+
+## Contract Validation Tests
+
+### Test 1: Core Package Exports
+
+```javascript
+// test: verify @terence/core exports
+import { createOrderEngine, calculatePrice, validateOrderItem, formatMoney, generateId } from '@terence/core';
+
+console.assert(typeof createOrderEngine === 'function', 'createOrderEngine should be a function');
+console.assert(typeof calculatePrice === 'function', 'calculatePrice should be a function');
+console.assert(typeof validateOrderItem === 'function', 'validateOrderItem should be a function');
+console.assert(typeof formatMoney === 'function', 'formatMoney should be a function');
+console.assert(typeof generateId === 'function', 'generateId should be a function');
+
+console.log('✅ @terence/core exports are valid');
+```
+
+### Test 2: UI Package Exports (After Implementation)
+
+```javascript
+// test: verify @terence/ui exports
+import { OrderFormView, useOrderFormAdapter, formatAmount, validateItemInput, calculateItemSubtotal } from '@terence/ui';
+
+console.assert(typeof OrderFormView === 'function', 'OrderFormView should be a component');
+console.assert(typeof useOrderFormAdapter === 'function', 'useOrderFormAdapter should be a function');
+console.assert(typeof formatAmount === 'function', 'formatAmount should be a function');
+console.assert(typeof validateItemInput === 'function', 'validateItemInput should be a function');
+console.assert(typeof calculateItemSubtotal === 'function', 'calculateItemSubtotal should be a function');
+
+console.log('✅ @terence/ui exports are valid');
+```
+
+### Test 3: Seed Project Imports (After Implementation)
+
+```javascript
+// test: verify seed project can import from packages
+// File: apps/seed/src/pages/OrderPage.jsx
+
+import { createOrderEngine } from '@terence/core';
+import { OrderFormView } from '@terence/ui';
+
+// Should compile without errors
+console.assert(typeof createOrderEngine === 'function', 'core import failed');
+console.assert(typeof OrderFormView === 'function', 'ui import failed');
+
+console.log('✅ Seed project imports are valid');
+```
+
+---
+
+## Implementation Checklist
+
+### @terence/ui Package
+
+- [ ] Update `packages/ui/src/components/index.js` to export OrderForm components
+  - [ ] Export `OrderFormView` from `./OrderForm/index.js`
+  - [ ] Export `useOrderFormAdapter` from `./OrderForm/index.js`
+  - [ ] Export `formatAmount` from `./OrderForm/OrderForm.logic.js`
+  - [ ] Export `validateItemInput` from `./OrderForm/OrderForm.logic.js`
+  - [ ] Export `calculateItemSubtotal` from `./OrderForm/OrderForm.logic.js`
+
+### @terence/seed Project
+
+- [ ] Update `apps/seed/src/pages/OrderPage.jsx` to import from `@terence/ui`
+  - [ ] Change: `import { OrderFormView } from '../ui/OrderForm'`
+  - [ ] To: `import { OrderFormView } from '@terence/ui'`
+- [ ] Delete `apps/seed/src/ui/` directory
+  - [ ] Remove `apps/seed/src/ui/OrderForm/OrderForm.view.jsx`
+  - [ ] Remove `apps/seed/src/ui/OrderForm/OrderForm.adapter.js`
+  - [ ] Remove `apps/seed/src/ui/OrderForm/OrderForm.logic.js`
+  - [ ] Remove `apps/seed/src/ui/OrderForm/index.js`
+  - [ ] Remove `apps/seed/src/ui/` directory
+
+### Validation
+
+- [ ] Run `pnpm install` to ensure workspace links are created
+- [ ] Run `pnpm --filter @terence/seed build` to verify build succeeds
+- [ ] Run `pnpm --filter @terence/seed dev` to verify dev server starts
+- [ ] Manual test: Open browser and verify OrderForm component renders correctly
+
+---
+
+## Version History
+
+| Version | Date | Changes |
+|---------|------|---------|
+| 1.0.0 | 2026-01-19 | Initial contract definition for feature 003-optimize-seed-imports |
