@@ -1,23 +1,13 @@
 /**
- * @terence/core - Business logic engines and services
+ * @terence/core - Terence 业务内核
  *
- * This package contains ONLY business logic with NO UI dependencies.
- * It provides:
- * - Engines: State machines and business logic orchestration
- * - Guards: Validation and business rule enforcement
- * - Services: Data access and external integrations
- * - Adapters: Interface adapters for external systems
- * - Utils: Pure utility functions
- *
- * Architecture constraints:
- * - MUST NOT depend on @terence/ui or any UI libraries
- * - MUST NOT depend on React, antd, or any view layer code
- * - MUST be testable in pure Node.js environment
+ * 提供 Engine + Adapter 架构的业务逻辑实现。
  */
 
-// Re-exports organized by module type
-export * from './engines/index.js';
-export * from './services/index.js';
-export * from './guards/index.js';
-export * from './adapters/index.js';
-export * from './utils/index.js';
+// Utils
+export { StateContainer } from './utils/StateContainer.js';
+export { invariant, invariantWithType } from './utils/invariant.js';
+export { validateDeps } from './utils/validation.js';
+
+// Engines
+export { createLoginEngine, initialState as loginInitialState, createMockDeps as createLoginMockDeps } from './engines/login/index.js';
