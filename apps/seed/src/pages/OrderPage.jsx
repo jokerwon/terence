@@ -11,7 +11,7 @@ import { useState, useCallback } from 'react'
 import { Card, Button, Space, Typography, Alert, Descriptions, message } from 'antd'
 import { PlusOutlined, ShoppingCartOutlined } from '@ant-design/icons'
 import { createOrderEngine } from '@terence/core'
-import { OrderFormView } from '../ui/OrderForm'
+import { OrderFormView } from '@terence/ui'
 
 const { Title, Text } = Typography
 
