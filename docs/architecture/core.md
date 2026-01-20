@@ -1,297 +1,290 @@
-# Core 业务内核详细设计文档（Engine + Adapter 落地版）
+# Core 业务内核详细设计文档（Engine + Adapter 落地版｜双轨模型）
 
-## 1. 文档目的
-
-本文档是在《Core 业务内核详细设计文档（理念版）》基础上的**工程落地版本**。
-
-目标不是再次阐述“为什么要这样设计”，而是回答三个更现实的问题：
-
-- 开发时 **代码应该写在哪里**
-- Review 时 **什么是对的 / 什么是错的**
-- 项目演进中 **如何在不推翻架构的前提下扩展业务**
-
-换句话说：
-
-> 这是一份可以直接约束日常开发行为的设计文档，而不是概念说明书。
+> 本文档是 Core 层的**最终工程化设计说明**。
+> 它不是理念草稿，而是：
+>
+> - 可以直接指导代码组织
+> - 可以约束未来扩展方向
+> - 可以作为 Code Review 的判断依据
+>
+> 本设计基于一个核心前提：**Core 只服务于 React 项目，但不被 React 污染。**
 
 ---
 
-## 2. Core 的角色重新界定
+## 一、设计背景与问题澄清
 
-### 2.1 Core 是什么
+在业务组件库场景下，Core 常见的失败原因有三类：
 
-Core 是 **业务内核（Business Engine Layer）**，它的职责是：
+1. Core 变成“第二个状态管理器”
+2. 简单业务被迫使用复杂抽象
+3. 业务开发者需要理解过多架构概念
 
-- 定义业务状态
-- 定义状态迁移规则
-- 定义业务动作（Command）
-- 协调副作用（通过注入）
-
-Core 是系统中 **唯一允许回答以下问题的地方**：
-
-- 现在业务处于什么阶段？
-- 能不能执行某个操作？
-- 执行后状态如何变化？
-
-### 2.2 Core 明确不是什么
-
-Core 不是：
-
-- React 组件
-- UI 状态管理层
-- API 封装层
-- Zustand store
-
-Core **不关心如何展示，也不关心谁来保存结果**。
+本设计的目标，是在**工程现实**与**架构纯度**之间取得平衡。
 
 ---
 
-## 3. 总体架构：Engine + Adapter
+## 二、核心设计结论（先给结论）
 
-```
-[ UI (antd) ]
-       ↑
-[ React Adapter ]
-       ↑
-[ Business Engine (core) ]
-       ↓
-[ Side Effects (API / Storage / Router) ]
-```
+Core 采用 **双轨模型（Dual-Track Core）**：
 
-### 3.1 单向依赖原则
+| 轨道    | 名称            | 是否持有状态 | 使用频率    | 适用场景                         |
+| ------- | --------------- | ------------ | ----------- | -------------------------------- |
+| Track A | Stateless Core  | 否           | 默认 / 80%+ | 登录、校验、提交、简单流程       |
+| Track B | Stateful Engine | 是           | 谨慎 / 少数 | 下单、审批流、向导流程、复杂流程 |
 
-- UI → Adapter → Engine
-- Engine **不依赖** Adapter / UI
-- 副作用通过 deps 注入，Engine 不直接 import
-
-这是一条不可逆的依赖链。
+> **不允许混用轨道。**
 
 ---
 
-## 4. 目录结构（路径即约束）
+## 三、总体架构分层
 
+```text
+┌─────────────────────┐
+│        UI 层        │  React / Antd / 组件
+│   （通过 Adapter）  │
+└─────────▲───────────┘
+          │
+┌─────────┴───────────┐
+│       Adapter 层    │  React Hook
+└─────────▲───────────┘
+          │
+┌─────────┴───────────┐
+│        Core 层      │  业务规则 / Engine
+└─────────────────────┘
 ```
+
+Core **永远不直接被 UI 使用**，
+所有有状态能力必须通过 Adapter 进入 React。
+
+---
+
+## 四、Track A：Stateless Core（默认轨道）
+
+### 4.1 定位
+
+Stateless Core 是：
+
+> **业务规则与流程算法的集合**
+
+它的职责只有三件事：
+
+1. 定义“什么是合法业务”
+2. 定义“业务流程如何执行”
+3. 通过参数调用外部副作用
+
+---
+
+### 4.2 明确不做的事情
+
+Stateless Core **严禁**：
+
+- 保存任何业务状态
+- 订阅状态变化
+- 引入 Zustand / Redux / Rx
+- 感知 React 生命周期
+
+---
+
+### 4.3 目录结构规范
+
+```text
 core/
-├── engines/
-│   └── login/
-│       ├── engine.js        # 业务状态机
-│       ├── state.js         # 初始状态定义
-│       ├── rules.js         # 业务判断规则
-│       └── effects.js       # 副作用接口约定
-├── adapters/
-│   └── react/
-│       ├── createAdapter.js # 通用 React Adapter
-│       └── useLogin.js
-├── contracts/
-│   └── login.contract.js    # 对外能力声明
-└── index.js
+ └─ login/
+     ├─ rules.js      // 业务规则（纯函数）
+     ├─ flows.js      // 业务流程（可 async）
+     └─ contracts.js  // 副作用接口定义
 ```
-
-### 4.1 路径级硬规则
-
-- `engines/**` 内禁止 import：react / zustand / antd
-- `adapters/**` 内禁止编写业务规则
-- `contracts/**` 不允许包含实现代码
-
-路径本身即是架构纪律。
 
 ---
 
-## 5. Engine 设计规范（核心）
-
-### 5.1 Engine 的标准形态
-
-每一个 Engine **必须**符合以下接口形态：
+### 4.4 示例：登录（Stateless Core）
 
 ```js
-createXxxEngine(deps) => {
-  getState()
-  subscribe(listener)
-  commands: { ... }
-  rules: { ... }
+// rules.js
+export function canSubmit(form) {
+  return Boolean(form.account && (form.password || form.otp))
 }
 ```
 
-不符合该形态的实现，视为不合规。
+```js
+// flows.js
+import { canSubmit } from './rules'
+
+export async function submitLogin(form, effects) {
+  if (!canSubmit(form)) {
+    throw new Error('LOGIN_INVALID')
+  }
+  return effects.login(form)
+}
+```
+
+```js
+// contracts.js
+export const loginEffectsContract = {
+  login: async () => {},
+}
+```
 
 ---
 
-### 5.2 状态定义（state）
+### 4.5 与项目状态的关系
 
-状态是 **业务真实状态**，而不是 UI 投影。
-
-示例（Login）：
+- 状态：项目负责（Zustand / useState）
+- Core：被动消费状态
 
 ```js
-export function initialState() {
+submitLogin(store.form, effects)
+```
+
+Core **不需要也不应该被监听**。
+
+---
+
+## 五、Track B：Stateful Engine（受限轨道）
+
+### 5.1 使用前置条件（必须全部满足）
+
+仅当业务满足以下条件时，允许使用 Engine：
+
+- 明确的多阶段流程
+- 状态需要跨多次交互持续存在
+- UI 严重依赖当前业务阶段
+
+否则一律回退 Track A。
+
+---
+
+### 5.2 Engine 的职责边界
+
+Engine 是：
+
+> **一个可运行的业务流程实体**
+
+它可以：
+
+- 保存业务状态
+- 执行状态迁移
+- 暴露业务动作
+
+它不能：
+
+- 直接操作 UI
+- 引入 React
+- 自行管理副作用实现
+
+---
+
+### 5.3 Engine 结构规范
+
+```text
+core/
+ └─ order-engine/
+     ├─ engine.js        // 核心状态机
+     ├─ transitions.js  // 状态迁移规则
+     └─ contract.js     // 外部能力契约
+```
+
+---
+
+### 5.4 Engine 示例（简化）
+
+```js
+export function createOrderEngine(context) {
+  let state = { step: 'draft' }
+  const listeners = new Set()
+
+  function getState() {
+    return state
+  }
+
+  function transition(action) {
+    state = transitions[state.step][action](state, context)
+    listeners.forEach((l) => l(state))
+  }
+
   return {
-    username: '',
-    password: '',
-    status: 'idle', // idle | submitting | success | error
-    error: null,
+    getState,
+    subscribe(fn) {
+      listeners.add(fn)
+      return () => listeners.delete(fn)
+    },
+    actions: { transition },
   }
 }
 ```
 
-状态必须满足：
+---
 
-- 可序列化
-- 可完整描述业务当前所处阶段
+## 六、Adapter 层（必须存在）
+
+### 6.1 Adapter 的定位
+
+Adapter 是 **Engine 与 React 之间的唯一桥梁**。
+
+- Adapter 属于 UI 层
+- Core 不包含 Adapter
 
 ---
 
-### 5.3 Commands（业务动作）
-
-Command 表示：
-
-> “业务试图发生一次变化”
-
-示例：
+### 6.2 标准 Adapter 形态
 
 ```js
-commands: {
-  inputUsername(value) {}
-  inputPassword(value) {}
-  submit() {}
+export function useOrderEngine(engine) {
+  const [state, setState] = useState(engine.getState())
+
+  useEffect(() => engine.subscribe(setState), [engine])
+
+  return [state, engine.actions]
 }
 ```
-
-规则：
-
-- Command 内允许修改 state
-- Command 内允许调用 deps
-- Command **不允许返回 UI 信息**
 
 ---
 
-### 5.4 Rules（业务判断）
+### 6.3 与 Zustand 的协作原则
 
-Rules 用于回答业务层判断问题。
-
-```js
-rules: {
-  canSubmit(state) {}
-  isSubmitting(state) {}
-}
-```
-
-Rules 必须：
-
-- 纯函数
-- 不产生副作用
-- 只依赖 state
-
-UI / Adapter / Zustand 不允许自行实现这些判断。
-
----
-
-### 5.5 副作用（Effects）
-
-Engine **不直接产生副作用**，而是通过 deps 调用。
-
-```js
-deps = {
-  loginRequest(payload) {},
-}
-```
-
-Engine 内只允许：
-
-```js
-await deps.loginRequest(data)
-```
+- Engine 管理流程态
+- Zustand 管理页面态 / UI 派生态
 
 禁止：
 
-- fetch
-- axios
-- localStorage
-- router
+- Zustand 直接修改 Engine 内部状态
 
 ---
 
-## 6. React Adapter 设计规范
+## 七、反模式清单（用于 Code Review）
 
-### 6.1 Adapter 的职责
-
-React Adapter 只做三件事：
-
-1. 订阅 Engine state
-2. 暴露 commands
-3. 暴露 rules
-
-### 6.2 通用 Adapter 模板
-
-```js
-export function createReactAdapter(engine) {
-  return function useEngine() {
-    const state = useSyncExternalStore(engine.subscribe, engine.getState, engine.getState)
-
-    return {
-      state,
-      commands: engine.commands,
-      rules: engine.rules,
-    }
-  }
-}
-```
-
-### 6.3 Adapter 禁止事项
-
-- 不允许计算 canSubmit
-- 不允许合并多个 Engine
-- 不允许引入 zustand
+❌ Core 内部使用 Zustand
+❌ Stateless Core 保存状态
+❌ 登录 / CRUD 使用 Engine
+❌ UI 直接调用 Engine.subscribe
+❌ Adapter 下沉到 Core
 
 ---
 
-## 7. 与 Zustand 的协作边界
+## 八、扩展与演进原则
 
-### 7.1 Zustand 的定位
-
-Zustand 是 **应用状态容器**，不是业务引擎。
-
-### 7.2 允许进入 Zustand 的内容
-
-- 登录成功的 user
-- token
-- orderId
-
-### 7.3 禁止进入 Zustand 的内容
-
-- status / step
-- canSubmit / canNext
-- 任何业务流程中间态
-
-判断原则：
-
-> 如果一个状态用于回答“现在能不能做某事”，它就不属于 Zustand。
+1. 新业务一律从 Stateless Core 开始
+2. 只有出现明确痛点才引入 Engine
+3. Engine 一旦引入，必须配套 Adapter
 
 ---
 
-## 8. 合规性检查（落地自检）
+## 九、总结（工程判断口诀）
 
-一个合格的 Core 实现应满足：
+> **状态属于项目，规则属于 Core，流程复杂才用 Engine。**
 
-- core 可在 Node 环境单独运行
-- 删除 UI 不影响业务运行
-- Adapter 中无业务判断
-- Zustand 中无业务中间态
-- 新业务可按模板复制 Engine
-
-若以上任一不满足，应视为架构违规。
+这不是折中方案，
+而是前端业务组件库在真实环境中的最优解。
 
 ---
 
-## 9. 总结
+## 十、结语
 
-本设计将《Core 业务内核详细设计文档》的理念，落实为：
+双轨模型的意义不在于“支持复杂场景”，
+而在于：
 
-- 可执行的目录结构
-- 可复用的 Engine 模板
-- 可 Review 的代码形态
-- 可长期演进的业务内核
+> **让简单业务永远保持简单。**
 
-> Core 不依赖“大家都理解”，
-> Core 依赖的是：**写错就不合规**。
+Engine 是能力，而不是默认选项。
 
-这正是业务组件库能够长期稳定演进的前提。
+请谨慎使用。
