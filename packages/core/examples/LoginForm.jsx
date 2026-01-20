@@ -3,8 +3,8 @@
  *
  * 演示如何使用 React Adapter 集成业务引擎。
  */
-import { useLogin } from '@terence/core/adapters/react';
-import { createLoginEngine } from '@terence/core/engines/login';
+import { createReactAdapter } from '@terence/core/adapters/react'
+import { createLoginEngine } from '@terence/core/engines/login'
 
 // 创建登录引擎实例
 const loginEngine = createLoginEngine({
@@ -12,42 +12,42 @@ const loginEngine = createLoginEngine({
     // Mock 实现
     return {
       token: 'demo-token',
-      user: { id: '123', name: 'User' }
-    };
+      user: { id: '123', name: 'User' },
+    }
   },
   saveToken: (token) => {
-    console.log('Token saved:', token);
+    console.log('Token saved:', token)
   },
   clearToken: () => {
-    console.log('Token cleared');
+    console.log('Token cleared')
   },
   navigate: (path) => {
-    console.log('Navigating to:', path);
-  }
-});
+    console.log('Navigating to:', path)
+  },
+})
 
 // 创建 Adapter Hook
-const useLogin = createReactAdapter(loginEngine);
+const useLogin = createReactAdapter(loginEngine)
 
 /**
  * LoginForm 组件
  */
 export function LoginForm() {
-  const { state, commands, rules } = useLogin();
+  const { state, commands, rules } = useLogin()
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    e.preventDefault()
 
     try {
-      await commands.submit();
+      await commands.submit()
     } catch (error) {
-      console.error('Login failed:', error);
+      console.error('Login failed:', error)
     }
-  };
+  }
 
   const handleReset = () => {
-    commands.reset();
-  };
+    commands.reset()
+  }
 
   return (
     <form onSubmit={handleSubmit}>
@@ -78,11 +78,7 @@ export function LoginForm() {
           />
         </div>
 
-        {rules.hasError() && (
-          <div style={{ color: 'red', marginBottom: '16px' }}>
-            {rules.getErrorMessage()}
-          </div>
-        )}
+        {rules.hasError() && <div style={{ color: 'red', marginBottom: '16px' }}>{rules.getErrorMessage()}</div>}
 
         <div style={{ marginBottom: '16px' }}>
           <button
@@ -95,18 +91,14 @@ export function LoginForm() {
               color: 'white',
               border: 'none',
               borderRadius: '4px',
-              cursor: rules.canSubmit() ? 'pointer' : 'not-allowed'
+              cursor: rules.canSubmit() ? 'pointer' : 'not-allowed',
             }}
           >
             {rules.isSubmitting() ? '登录中...' : '登录'}
           </button>
         </div>
 
-        {state.status === 'success' && (
-          <div style={{ color: 'green', marginTop: '16px' }}>
-            登录成功! Token: {state.token}
-          </div>
-        )}
+        {state.status === 'success' && <div style={{ color: 'green', marginTop: '16px' }}>登录成功! Token: {state.token}</div>}
 
         <div style={{ marginTop: '16px' }}>
           <button
@@ -118,7 +110,7 @@ export function LoginForm() {
               backgroundColor: 'transparent',
               border: '1px solid #d9d9d9',
               borderRadius: '4px',
-              cursor: 'pointer'
+              cursor: 'pointer',
             }}
           >
             重置
@@ -126,5 +118,5 @@ export function LoginForm() {
         </div>
       </div>
     </form>
-  );
+  )
 }
