@@ -1,12 +1,10 @@
 /**
  * React Adapter - 连接 Engine 和 React 组件
  *
- * 提供 createReactAdapter 工厂函数,将业务引擎适配到 React 组件。
+ * 提供 createReactAdapter 工厂函数，将业务引擎适配到 React 组件。
  * 使用 React 19 的 useSyncExternalStore API 实现订阅机制。
  *
  * @module
- * @param {Object} engine - 业务引擎实例
- * @returns {Function} React Hook
  *
  * @example
  * const useLogin = createReactAdapter(loginEngine);
@@ -32,6 +30,9 @@ import { useSyncExternalStore } from 'react'
  *
  * @example
  * const useLogin = createReactAdapter(loginEngine);
+ *
+ * // 使用 selector 选择部分状态
+ * const { status } = useLogin((state) => ({ status: state.status }));
  */
 export function createReactAdapter(engine) {
   const subscribeCache = new WeakMap()
@@ -62,6 +63,7 @@ export function createReactAdapter(engine) {
     return {
       state,
       commands: engine.commands,
+      actions: engine.actions,
       rules: engine.rules,
     }
   }

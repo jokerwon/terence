@@ -2,9 +2,13 @@
  * LoginForm - 登录表单组件
  *
  * 演示如何使用 React Adapter 集成业务引擎。
+ *
+ * 注意: Adapter 已从 Core 层迁移到 UI 层
+ * - 旧路径: @terence/core/adapters/react
+ * - 新路径: @terence/ui/hooks/adapters
  */
-import { createReactAdapter } from '@terence/core/adapters/react'
-import { createLoginEngine } from '@terence/core/engines/login'
+import { createReactAdapter } from '@terence/ui/hooks/adapters'
+import { createLoginEngine } from '@terence/core/engines/login/index.js'
 
 // 创建登录引擎实例
 const loginEngine = createLoginEngine({
