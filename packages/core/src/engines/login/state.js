@@ -6,7 +6,7 @@
 
 /**
  * 初始化登录状态
- * @returns {LoginState} 初始状态
+ * @returns 初始状态
  */
 export function initialState() {
   return {
@@ -15,6 +15,6 @@ export function initialState() {
     status: 'idle', // idle | editing | submitting | success | error
     error: null,
     token: null,
-    user: null
-  };
+    user: null,
+  }
 }

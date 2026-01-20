@@ -5,6 +5,7 @@ import { createBrowserRouter } from 'react-router'
 import GlobalLayout from '../layouts/GlobalLayout'
 import { HomePage } from '../pages/HomePage'
 import { StateExample } from '../pages/StateExample'
+import LoginPage from '../pages/Login'
 
 export const router = createBrowserRouter([
   {
@@ -13,6 +14,10 @@ export const router = createBrowserRouter([
       {
         index: true,
         Component: HomePage,
+      },
+      {
+        path: 'login',
+        Component: LoginPage,
       },
       {
         path: 'state-example',

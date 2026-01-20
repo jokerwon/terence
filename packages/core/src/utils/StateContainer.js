@@ -27,18 +27,18 @@ export class StateContainer {
    * @param {Object} initialState - 初始状态
    */
   constructor(initialState) {
-    this._state = initialState;
-    this._listeners = new Set();
-    this._pendingUpdates = new Set();
-    this._isBatching = false;
+    this._state = initialState
+    this._listeners = new Set()
+    this._pendingUpdates = new Set()
+    this._isBatching = false
   }
 
   /**
-   * 获取当前状态的不可变副本
-   * @returns {Object} 状态的深拷贝
+   * 获取当前状态
+   * @returns {Object} 当前状态
    */
   getState() {
-    return this._immutableCopy(this._state);
+    return this._state
   }
 
   /**
@@ -46,24 +46,27 @@ export class StateContainer {
    * @param {Object|Function} updater - 新状态或更新函数
    */
   setState(updater) {
-    const start = performance.now();
+    const start = performance.now()
 
-    let newState;
+    let newState
     if (typeof updater === 'function') {
-      newState = updater(this._state);
+      newState = updater(this._state)
     } else {
-      newState = updater;
+      newState = updater
     }
 
-    if (this._isBatching) {
-      this._pendingUpdates.add(() => this._applyState(newState));
-    } else {
-      this._applyState(newState);
+    // 只有当新状态与当前状态不同时才更新和通知
+    if (!this._shallowEqual(this._state, newState)) {
+      if (this._isBatching) {
+        this._pendingUpdates.add(() => this._applyState(newState))
+      } else {
+        this._applyState(newState)
+      }
     }
 
-    const duration = performance.now() - start;
+    const duration = performance.now() - start
     if (duration > 1) {
-      console.warn(`[StateContainer] State update took ${duration.toFixed(2)}ms`);
+      console.warn(`[StateContainer] State update took ${duration.toFixed(2)}ms`)
     }
   }
 
@@ -72,14 +75,14 @@ export class StateContainer {
    * @param {Function} updates - 包含 setState 调用的函数
    */
   batch(updates) {
-    this._isBatching = true;
+    this._isBatching = true
     try {
-      updates();
+      updates()
     } finally {
-      this._isBatching = false;
-      const updates = Array.from(this._pendingUpdates);
-      this._pendingUpdates.clear();
-      updates.forEach(update => update());
+      this._isBatching = false
+      const updates = Array.from(this._pendingUpdates)
+      this._pendingUpdates.clear()
+      updates.forEach((update) => update())
     }
   }
 
@@ -89,8 +92,8 @@ export class StateContainer {
    * @returns {Function} 取消订阅函数
    */
   subscribe(listener) {
-    this._listeners.add(listener);
-    return () => this._listeners.delete(listener);
+    this._listeners.add(listener)
+    return () => this._listeners.delete(listener)
   }
 
   /**
@@ -98,8 +101,8 @@ export class StateContainer {
    * @private
    */
   _applyState(newState) {
-    this._state = newState;
-    this._notify();
+    this._state = newState
+    this._notify()
   }
 
   /**
@@ -107,31 +110,32 @@ export class StateContainer {
    * @private
    */
   _notify() {
-    const currentState = this.getState();
-    this._listeners.forEach(listener => {
+    this._listeners.forEach((listener) => {
       try {
-        listener(currentState);
+        listener(this._state)
       } catch (err) {
-        console.error('[StateContainer] Listener error:', err);
+        console.error('[StateContainer] Listener error:', err)
       }
-    });
+    })
   }
 
   /**
-   * 创建不可变副本(深拷贝)
+   * 浅比较两个对象是否相等
    * @private
    */
-  _immutableCopy(obj) {
-    if (obj === null || typeof obj !== 'object') return obj;
-    if (Array.isArray(obj)) {
-      return obj.map(item => this._immutableCopy(item));
+  _shallowEqual(objA, objB) {
+    if (objA === objB) return true
+    if (typeof objA !== 'object' || objA === null || typeof objB !== 'object' || objB === null) {
+      return false
     }
-    const copy = {};
-    for (const key in obj) {
-      if (obj.hasOwnProperty(key)) {
-        copy[key] = this._immutableCopy(obj[key]);
+    const keysA = Object.keys(objA)
+    const keysB = Object.keys(objB)
+    if (keysA.length !== keysB.length) return false
+    for (const key of keysA) {
+      if (!Object.prototype.hasOwnProperty.call(objB, key) || objA[key] !== objB[key]) {
+        return false
       }
     }
-    return copy;
+    return true
   }
 }

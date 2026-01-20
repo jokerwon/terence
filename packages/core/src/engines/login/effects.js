@@ -6,10 +6,10 @@
 
 /**
  * @typedef {Object} LoginDependencies
- * @property {function(payload: LoginPayload): Promise<LoginResult>} loginRequest - 登录 API 请求
- * @property {function(token: string): void} saveToken - 保存 token 到应用状态
- * @property {function(): void} clearToken - 清除 token
- * @property {function(path: string): void} navigate - 页面导航
+ * @property {(payload: LoginPayload) => Promise<LoginResult>} loginRequest - 登录 API 请求
+ * @property {(token: string) => void} saveToken - 保存 token 到应用状态
+ * @property {() => void} clearToken - 清除 token
+ * @property {(path: string) => void} navigate - 页面导航
  */
 
 /**
@@ -52,12 +52,12 @@ export function createMockDeps(overrides = {}) {
       user: {
         id: '1',
         name: 'Test User',
-        email: 'test@example.com'
-      }
+        email: 'test@example.com',
+      },
     }),
     saveToken: () => {},
     clearToken: () => {},
     navigate: () => {},
-    ...overrides
-  };
+    ...overrides,
+  }
 }
