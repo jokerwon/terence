@@ -3,3 +3,4 @@
  */
 
 // Placeholder for future adapters
+export {}
