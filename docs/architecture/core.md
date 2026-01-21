@@ -8,6 +8,11 @@
 > - 可以作为 Code Review 的判断依据
 >
 > 本设计基于一个核心前提：**Core 只服务于 React 项目，但不被 React 污染。**
+>
+> 并基于以下技术与约束：
+>
+> - JavaScript
+> - zod 作为数据校验工具
 
 ---
 
@@ -68,9 +73,23 @@ Stateless Core 是：
 
 它的职责只有三件事：
 
-1. 定义“什么是合法业务”
-2. 定义“业务流程如何执行”
-3. 通过参数调用外部副作用
+1. 定义业务流程允许的形态（flow）
+2. 定义业务所需的数据契约（schema）
+3. 提供规则判断或流程执行能力
+
+它有以下特点：
+
+- 不保存状态
+- 无生命周期
+- 通过纯函数暴露业务能力
+- 典型形式：`flow + schema + rules`
+
+适用于：
+
+- 登录
+- 表单
+- CRUD
+- 校验与业务判断
 
 ---
 
@@ -89,10 +108,14 @@ Stateless Core **严禁**：
 
 ```text
 core/
- └─ login/
-     ├─ rules.js      // 业务规则（纯函数）
-     ├─ flows.js      // 业务流程（可 async）
-     └─ contracts.js  // 副作用接口定义
+ └─ src/
+    ├─ index.js         // 入口
+    ├─ utils/            // 工具函数
+    └─ login/
+       ├─ rules.js      // 业务规则（纯函数）
+       ├─ flows.js      // 业务流程（可 async）
+       ├─ schemas.js    // zod 数据契约
+       └─ index.js
 ```
 
 ---
@@ -101,29 +124,61 @@ core/
 
 ```js
 // rules.js
-export function canSubmit(form) {
-  return Boolean(form.account && (form.password || form.otp))
+import z from 'zod'
+import { otpSchema, passwordSchema } from './schemas'
+
+export const validateSchema = (form, schema) => {
+  const result = schema.safeParse(form)
+  let error
+  let data
+  if (!result.success) {
+    error = z.treeifyError(result.error)
+  } else {
+    data = result.data
+  }
+  return {
+    success: result.success,
+    error,
+    data,
+  }
 }
 ```
 
 ```js
 // flows.js
-import { canSubmit } from './rules'
+import { validatePassword } from './rules.js'
 
 export async function submitLogin(form, effects) {
-  if (!canSubmit(form)) {
+  // 1. 业务规则验证
+  if (!validatePassword(form)?.success) {
     throw new Error('LOGIN_INVALID')
   }
-  return effects.login(form)
+  // 2. 调用外部副作用
+  const result = await effects.login(form)
+  // 3. 返回结果
+  return result
 }
 ```
 
 ```js
-// contracts.js
-export const loginEffectsContract = {
-  login: async () => {},
-}
+// schemas.js
+import z from 'zod'
+
+export const accNbrSchema = z.string().length(10)
+export const passwordSchema = z.object({
+  number: accNbrSchema,
+  password: z.string().nonempty(),
+})
+export const otpSchema = z.object({
+  number: accNbrSchema,
+  otp: z.string().length(6),
+})
 ```
+
+说明：
+
+- schema 是业务模块对数据的最小约束
+- 错误信息建议使用业务码，便于 i18n
 
 ---
 
@@ -178,80 +233,16 @@ Engine 是：
 
 ```text
 core/
- └─ order-engine/
-     ├─ engine.js        // 核心状态机
-     ├─ transitions.js  // 状态迁移规则
-     └─ contract.js     // 外部能力契约
+ └─ src/
+    └─ order-engine/
+        ├─ engine.js       // 核心状态机
+        ├─ transitions.js  // 状态迁移规则
+        └─ contract.js     // 外部能力契约
 ```
 
 ---
 
-### 5.4 Engine 示例（简化）
-
-```js
-export function createOrderEngine(context) {
-  let state = { step: 'draft' }
-  const listeners = new Set()
-
-  function getState() {
-    return state
-  }
-
-  function transition(action) {
-    state = transitions[state.step][action](state, context)
-    listeners.forEach((l) => l(state))
-  }
-
-  return {
-    getState,
-    subscribe(fn) {
-      listeners.add(fn)
-      return () => listeners.delete(fn)
-    },
-    actions: { transition },
-  }
-}
-```
-
----
-
-## 六、Adapter 层（必须存在）
-
-### 6.1 Adapter 的定位
-
-Adapter 是 **Engine 与 React 之间的唯一桥梁**。
-
-- Adapter 属于 UI 层
-- Core 不包含 Adapter
-
----
-
-### 6.2 标准 Adapter 形态
-
-```js
-export function useOrderEngine(engine) {
-  const [state, setState] = useState(engine.getState())
-
-  useEffect(() => engine.subscribe(setState), [engine])
-
-  return [state, engine.actions]
-}
-```
-
----
-
-### 6.3 与 Zustand 的协作原则
-
-- Engine 管理流程态
-- Zustand 管理页面态 / UI 派生态
-
-禁止：
-
-- Zustand 直接修改 Engine 内部状态
-
----
-
-## 七、反模式清单（用于 Code Review）
+## 六、反模式清单（用于 Code Review）
 
 ❌ Core 内部使用 Zustand
 ❌ Stateless Core 保存状态
@@ -261,30 +252,9 @@ export function useOrderEngine(engine) {
 
 ---
 
-## 八、扩展与演进原则
+## 七、扩展与演进原则
 
 1. 新业务一律从 Stateless Core 开始
 2. 只有出现明确痛点才引入 Engine
-3. Engine 一旦引入，必须配套 Adapter
 
 ---
-
-## 九、总结（工程判断口诀）
-
-> **状态属于项目，规则属于 Core，流程复杂才用 Engine。**
-
-这不是折中方案，
-而是前端业务组件库在真实环境中的最优解。
-
----
-
-## 十、结语
-
-双轨模型的意义不在于“支持复杂场景”，
-而在于：
-
-> **让简单业务永远保持简单。**
-
-Engine 是能力，而不是默认选项。
-
-请谨慎使用。
