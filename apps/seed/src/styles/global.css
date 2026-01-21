@@ -1,1 +1,5 @@
-@import 'tailwindcss';
+/* 设置基础路径为项目根目录 (terence/) */
+@import 'tailwindcss' source('../../../../');
+
+/* 扫描 @terence/ui 包的源文件 */
+@source './packages/ui/src/**/*.{js,jsx,ts,tsx}';
